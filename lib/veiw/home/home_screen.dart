@@ -2,13 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:pksha/notification/models/notification_model.dart';
 import 'package:pksha/notification/services/notification_service.dart';
 import 'package:pksha/veiw/questionnaire/questionnaire_screen.dart';
+import 'package:pksha/veiw/training/training_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: '通知アプリ',
+      title: '通知一覧',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
         useMaterial3: true,
@@ -39,31 +40,10 @@ class _NotificationScreenState extends State<NotificationScreen> {
     ),
     NotificationModel(
       id: 2,
-      title: 'タスク期限',
-      message: 'プロジェクト提出期限です',
+      title: 'ランニング',
+      message: 'ランニング30分の時間です',
       scheduledTime: DateTime.now().add(const Duration(hours: 1)),
-      iconName: 'task',
-    ),
-    NotificationModel(
-      id: 3,
-      title: 'ミーティング',
-      message: 'チームミーティングの時間です',
-      scheduledTime: DateTime.now().add(const Duration(hours: 2)),
-      iconName: 'meeting',
-    ),
-    NotificationModel(
-      id: 4,
-      title: 'アラート',
-      message: '緊急アラートです',
-      scheduledTime: DateTime.now().add(const Duration(hours: 3)),
-      iconName: 'alert',
-    ),
-    NotificationModel(
-      id: 5,
-      title: 'アラーム',
-      message: '設定したアラームの時間です',
-      scheduledTime: DateTime.now().add(const Duration(minutes: 30)),
-      iconName: 'alarm',
+      iconName: 'training',
     ),
   ];
 
@@ -107,8 +87,8 @@ class _NotificationScreenState extends State<NotificationScreen> {
     // 10秒後の通知もスケジュール
     await _notificationService.scheduleNotification(
       id: 999,
-      title: '予約通知テスト',
-      body: '10秒後に予約した通知です',
+      title: '腕立てふせ！',
+      body: 'まずは1回やってみよう！',
       scheduledTime: now,
       iconName: 'muscle',
     );
@@ -123,16 +103,8 @@ class _NotificationScreenState extends State<NotificationScreen> {
     switch (iconName) {
       case 'muscle':
         return Icons.fitness_center;
-      case 'alarm':
-        return Icons.alarm;
-      case 'meeting':
-        return Icons.people;
-      case 'task':
-        return Icons.assignment;
-      case 'alert':
-        return Icons.warning;
-      case 'test':
-        return Icons.notifications_active;
+      case 'training':
+        return Icons.run_circle;
       default:
         return Icons.notifications;
     }
@@ -142,11 +114,23 @@ class _NotificationScreenState extends State<NotificationScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('通知画面'),
+        title: const Text('通知一覧'),
         backgroundColor: Theme.of(context).colorScheme.primary,
         foregroundColor: Colors.white,
         actions: [
-          // アンケートボタンを右上に配置
+          // トレーニングボタン
+          IconButton(
+            icon: const Icon(Icons.fitness_center),
+            tooltip: 'トレーニング',
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const TrainingScreen(),
+                ),
+              );
+            },
+          ),
+          // アンケートボタン
           Padding(
             padding: const EdgeInsets.only(right: 8.0),
             child: IconButton(
