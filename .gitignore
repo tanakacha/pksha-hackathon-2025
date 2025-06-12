@@ -46,3 +46,46 @@ app.*.map.json
 
 # env
 .env
+
+# Personal or device-specific information
+**/xcuserdata/
+**/*.xcuserstate
+**/UserInterfaceState.xcuserstate
+**/*.moved-aside
+/ios/GoogleService-Info.plist
+**/*.keystore
+**/*.jks
+**/*.p8
+**/*.p12
+**/*.key
+**/*.mobileprovision
+**/*.cert
+**/*.cer
+/ios/build/
+**/*.xcscmblueprint
+**/*.xccheckout
+
+# Local developer files
+/developers/
+.config/
+.history/
+**/fastlane/report.xml
+
+# iOS固有の設定ファイル
+ios/Flutter/Debug.xcconfig
+ios/Flutter/Release.xcconfig
+ios/Flutter/Profile.xcconfig
+ios/Runner.xcodeproj/project.pbxproj
+ios/Runner.xcworkspace/contents.xcworkspacedata
+
+# macOS固有の設定ファイル
+macos/Flutter/Flutter-Debug.xcconfig
+macos/Flutter/Flutter-Release.xcconfig
+macos/Flutter/GeneratedPluginRegistrant.swift
+
+# Windows固有の設定
+windows/flutter/generated_plugins.cmake
+
+# Podファイル（依存関係管理）
+ios/Podfile.lock
+macos/Podfile
