@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:pksha/notification/models/notification_model.dart';
 import 'package:pksha/notification/services/notification_service.dart';
+import 'package:pksha/veiw/questionnaire/questionnaire_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -145,24 +146,88 @@ class _NotificationScreenState extends State<NotificationScreen> {
         backgroundColor: Theme.of(context).colorScheme.primary,
         foregroundColor: Colors.white,
       ),
-      body: ListView.builder(
-        itemCount: _notifications.length,
-        itemBuilder: (context, index) {
-          final notification = _notifications[index];
-          return ListTile(
-            title: Text(notification.title),
-            subtitle: Text(notification.message),
-            trailing: Text(
-              '${notification.scheduledTime.hour}:${notification.scheduledTime.minute.toString().padLeft(2, '0')}',
+      body: Column(
+        children: [
+          // リストビューをExpandedでラップして高さ制約を与える
+          Expanded(
+            child: ListView.builder(
+              itemCount: _notifications.length,
+              itemBuilder: (context, index) {
+                final notification = _notifications[index];
+                return ListTile(
+                  title: Text(notification.title),
+                  subtitle: Text(notification.message),
+                  trailing: Text(
+                    '${notification.scheduledTime.hour}:${notification.scheduledTime.minute.toString().padLeft(2, '0')}',
+                  ),
+                  leading: Icon(_getIconData(notification.iconName)),
+                );
+              },
             ),
-            leading: Icon(_getIconData(notification.iconName)),
-          );
-        },
+          ),
+
+          // 画面遷移ボタンを追加
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: ElevatedButton(
+              onPressed: () {
+                // 新しい画面に遷移
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => const QuestionnaireScreen(),
+                  ),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Theme.of(context).colorScheme.primary,
+                foregroundColor: Colors.white,
+                minimumSize: const Size(double.infinity, 50), // 横幅いっぱい、高さ50
+              ),
+              child: const Text('アンケートに進む'),
+            ),
+          ),
+        ],
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _sendTestNotification,
         tooltip: 'テスト通知',
         child: const Icon(Icons.notifications_active),
+      ),
+    );
+  }
+}
+
+// 遷移先の画面を定義
+class SecondScreen extends StatelessWidget {
+  const SecondScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('次の画面'),
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        foregroundColor: Colors.white,
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Text('新しい画面です', style: TextStyle(fontSize: 20)),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () {
+                // 前の画面に戻る
+                Navigator.of(context).pop();
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Theme.of(context).colorScheme.primary,
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('戻る'),
+            ),
+          ],
+        ),
       ),
     );
   }
