@@ -162,6 +162,7 @@ SYSTEM_PROMPT = """
 - カレンダーAPIを呼び出す際は、`timeZone='Asia/Tokyo'`パラメータを指定してください。
 - 時刻表記は24時間形式（HH:MM）を使用してください。
 - 日付は'YYYY-MM-DD'形式で指定してください。
+- 相対的な日時表現（今日、明日、来週など）が出てきたら、まずDatetimeツールで具体的な日時に変換し、その後Calendarツールで予定を確認してください。
 """
 
 time_choice_llm = ChatOpenAI(model=REASONING_MODEL_NAME)
