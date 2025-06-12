@@ -1,122 +1,146 @@
 import 'package:flutter/material.dart';
+import 'package:pksha/notification/notification.dart';
+// import 'services/notification_service.dart';
+// import 'models/notification_model.dart';
 
-void main() {
+void main() async {
+  // Flutter初期化を確実に行う
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // 通知サービスの初期化
+  await NotificationService().initialize();
+
   runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
-
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: '通知アプリ',
       theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+        useMaterial3: true,
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: const NotificationScreen(),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
+class NotificationScreen extends StatefulWidget {
+  const NotificationScreen({super.key});
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  State<NotificationScreen> createState() => _NotificationScreenState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+class _NotificationScreenState extends State<NotificationScreen> {
+  final NotificationService _notificationService = NotificationService();
 
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
+  // モックデータ（ハードコーディング）
+  final List<NotificationModel> _notifications = [
+    NotificationModel(
+      id: 1,
+      title: '会議のお知らせ',
+      message: '10分後に会議が始まります',
+      scheduledTime: DateTime.now().add(const Duration(minutes: 10)),
+      iconName: 'meeting',
+    ),
+    NotificationModel(
+      id: 2,
+      title: 'タスク期限',
+      message: 'プロジェクト提出期限です',
+      scheduledTime: DateTime.now().add(const Duration(hours: 1)),
+      iconName: 'task',
+    ),
+    NotificationModel(
+      id: 3,
+      title: 'ミーティング',
+      message: 'チームミーティングの時間です',
+      scheduledTime: DateTime.now().add(const Duration(hours: 2)),
+      iconName: 'alert',
+    ),
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    // アプリ起動時にモックデータの通知をスケジュール
+    _scheduleNotifications();
+  }
+
+  // 通知をスケジュール
+  void _scheduleNotifications() async {
+    for (var notification in _notifications) {
+      if (notification.scheduledTime.isAfter(DateTime.now())) {
+        await _notificationService.scheduleNotification(
+          id: notification.id,
+          title: notification.title,
+          body: notification.message,
+          scheduledTime: notification.scheduledTime,
+          iconName: notification.iconName,
+        );
+      }
+    }
+  }
+
+  // テスト用の即時通知
+  void _sendTestNotification() async {
+    print("テスト通知を送信します...");
+
+    // 現在時刻の10秒後に通知をスケジュール
+    final now = DateTime.now().add(const Duration(seconds: 10));
+
+    // まずは即時通知を試す
+    await _notificationService.showNotification(
+      id: 0,
+      title: 'テスト即時通知',
+      body: '即時通知のテストです',
+      iconName: 'test',
+    );
+
+    // 10秒後の通知もスケジュール
+    await _notificationService.scheduleNotification(
+      id: 999,
+      title: '予約通知テスト',
+      body: '10秒後に予約した通知です',
+      scheduledTime: now,
+      iconName: 'test',
+    );
+
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('テスト通知を送信しました')));
   }
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
     return Scaffold(
       appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
+        title: const Text('通知サンプル'),
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        foregroundColor: Colors.white,
       ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text('You have pushed the button this many times:'),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
+      body: ListView.builder(
+        itemCount: _notifications.length,
+        itemBuilder: (context, index) {
+          final notification = _notifications[index];
+          return ListTile(
+            title: Text(notification.title),
+            subtitle: Text(notification.message),
+            trailing: Text(
+              '${notification.scheduledTime.hour}:${notification.scheduledTime.minute.toString().padLeft(2, '0')}',
             ),
-          ],
-        ),
+            leading: const Icon(Icons.notifications),
+          );
+        },
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
+        onPressed: _sendTestNotification,
+        tooltip: 'テスト通知',
+        child: const Icon(Icons.notifications_active),
+      ),
     );
   }
 }
