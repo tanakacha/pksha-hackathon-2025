@@ -142,9 +142,26 @@ class _NotificationScreenState extends State<NotificationScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('通知サンプル'),
+        title: const Text('通知画面'),
         backgroundColor: Theme.of(context).colorScheme.primary,
         foregroundColor: Colors.white,
+        actions: [
+          // アンケートボタンを右上に配置
+          Padding(
+            padding: const EdgeInsets.only(right: 8.0),
+            child: IconButton(
+              icon: const Icon(Icons.question_answer),
+              tooltip: 'アンケート',
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => const QuestionnaireScreen(),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
       ),
       body: Column(
         children: [
@@ -163,27 +180,6 @@ class _NotificationScreenState extends State<NotificationScreen> {
                   leading: Icon(_getIconData(notification.iconName)),
                 );
               },
-            ),
-          ),
-
-          // 画面遷移ボタンを追加
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: ElevatedButton(
-              onPressed: () {
-                // 新しい画面に遷移
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => const QuestionnaireScreen(),
-                  ),
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Theme.of(context).colorScheme.primary,
-                foregroundColor: Colors.white,
-                minimumSize: const Size(double.infinity, 50), // 横幅いっぱい、高さ50
-              ),
-              child: const Text('アンケートに進む'),
             ),
           ),
         ],
