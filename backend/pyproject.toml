@@ -1,0 +1,15 @@
+[project]
+name = "calendar-agent-backend"
+version = "0.1.0"
+description = "Google Calendar Agent with MCP integration"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "python-dotenv",
+    "langchain-mcp-adapters",
+    "langgraph",
+    "langchain-openai",
+    "requests",
+    "fastapi>=0.104.0",
+    "uvicorn[standard]>=0.24.0",
+]
