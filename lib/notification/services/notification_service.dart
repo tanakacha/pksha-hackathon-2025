@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz_data;
+import 'dart:typed_data';
+import 'package:flutter/services.dart' show rootBundle;
 
 class NotificationService {
   static final NotificationService _instance = NotificationService._internal();
@@ -44,6 +46,40 @@ class NotificationService {
                 DarwinNotificationCategoryOption.hiddenPreviewShowTitle,
               },
             ),
+            DarwinNotificationCategory(
+              'muscle',
+              actions: [DarwinNotificationAction.plain('done', '完了')],
+              options: <DarwinNotificationCategoryOption>{
+                DarwinNotificationCategoryOption.hiddenPreviewShowTitle,
+              },
+            ),
+            DarwinNotificationCategory(
+              'task',
+              actions: [
+                DarwinNotificationAction.plain('complete', '完了'),
+                DarwinNotificationAction.plain('postpone', '延期'),
+              ],
+              options: <DarwinNotificationCategoryOption>{
+                DarwinNotificationCategoryOption.hiddenPreviewShowTitle,
+              },
+            ),
+            DarwinNotificationCategory(
+              'meeting',
+              actions: [
+                DarwinNotificationAction.plain('attend', '参加'),
+                DarwinNotificationAction.plain('decline', '辞退'),
+              ],
+              options: <DarwinNotificationCategoryOption>{
+                DarwinNotificationCategoryOption.hiddenPreviewShowTitle,
+              },
+            ),
+            DarwinNotificationCategory(
+              'alert',
+              actions: [DarwinNotificationAction.plain('acknowledge', '確認')],
+              options: <DarwinNotificationCategoryOption>{
+                DarwinNotificationCategoryOption.hiddenPreviewShowTitle,
+              },
+            ),
           ],
         );
 
@@ -74,6 +110,9 @@ class NotificationService {
     required String body,
     String? iconName,
   }) async {
+    // アイコンの添付ファイルを取得
+    final attachments = await _getNotificationAttachments(iconName);
+
     // 最大レベルの割り込み設定でiOS通知を構成
     final DarwinNotificationDetails iosDetails = DarwinNotificationDetails(
       presentAlert: true,
@@ -83,9 +122,9 @@ class NotificationService {
       presentList: true,
       sound: 'default',
       interruptionLevel: InterruptionLevel.timeSensitive, // 時間に敏感な通知として設定
-      categoryIdentifier: iconName ?? 'alarm', // アラームまたは指定したアイコン名
+      categoryIdentifier: iconName ?? 'muscle', // アラームまたは指定したアイコン名
       threadIdentifier: 'alarm_notifications', // 通知をグループ化
-      attachments: getNotificationAttachment(iconName), // 通知にカスタム画像を添付
+      attachments: attachments,
     );
 
     final NotificationDetails notificationDetails = NotificationDetails(
@@ -108,6 +147,9 @@ class NotificationService {
     required DateTime scheduledTime,
     String? iconName,
   }) async {
+    // アイコンの添付ファイルを取得
+    final attachments = await _getNotificationAttachments(iconName);
+
     final DarwinNotificationDetails iosDetails = DarwinNotificationDetails(
       presentAlert: true,
       presentBadge: true,
@@ -116,8 +158,9 @@ class NotificationService {
       presentList: true,
       sound: 'default',
       interruptionLevel: InterruptionLevel.timeSensitive,
-      categoryIdentifier: iconName ?? 'alarm', // アラームまたは指定したアイコン名
+      categoryIdentifier: iconName ?? 'muscle', // muscleアイコンをデフォルトにする
       threadIdentifier: 'alarm_notifications', // 通知をグループ化
+      attachments: attachments,
     );
 
     final NotificationDetails notificationDetails = NotificationDetails(
@@ -135,47 +178,33 @@ class NotificationService {
     );
   }
 
-  // 通知アイコン名に基づいて添付ファイルを取得
-  List<DarwinNotificationAttachment>? getNotificationAttachment(String? iconName) {
-    // iconNameに基づいて異なる添付ファイルを返す
-    // 注意: 実際の画像ファイルはiOSのAssets.xcassetsに追加する必要があります
+  // 通知アイコンの添付ファイルを生成するメソッド
+  Future<List<DarwinNotificationAttachment>?> _getNotificationAttachments(
+    String? iconName,
+  ) async {
     try {
-      if (iconName == null) return null;
-      
-      String assetName;
-      
-      switch (iconName) {
-        case 'alarm':
-          assetName = 'alarm_icon';
-          break;
-        case 'task':
-          assetName = 'task_icon';
-          break;
-        case 'meeting':
-          assetName = 'meeting_icon';
-          break;
-        case 'alert':
-          assetName = 'alert_icon';
-          break;
-        case 'test':
-          assetName = 'test_icon';
-          break;
-        default:
-          assetName = 'notification_icon';
-      }
-      
-      // iOS用の添付ファイルパス
-      // 注意: 実際のパスはプロジェクトによって異なる場合があります
-      final String attachmentPath = 'Library/Application Support/NotificationImages/$assetName.png';
-      return [
-        DarwinNotificationAttachment(
-          identifier: 'image',
-          url: Uri.file(attachmentPath),
-          hideThumbnail: false,
-        ),
-      ];
+      // すべての通知でmuscleアイコンを使用（または指定されたアイコンを使用）
+      final String iconPath = 'assets/icons/${iconName ?? 'muscle'}.png';
+
+      // アセットからファイルを読み込む
+      final ByteData byteData = await rootBundle.load(iconPath);
+      final Uint8List imageBytes = byteData.buffer.asUint8List();
+
+      // 一時ファイルに保存
+      final String tempPath =
+          '${Directory.systemTemp.path}/${iconName ?? 'muscle'}.png';
+      final File tempFile = File(tempPath);
+      await tempFile.writeAsBytes(imageBytes);
+
+      // 添付ファイルを生成
+      final attachment = DarwinNotificationAttachment(
+        tempPath,
+        identifier: 'notification_icon',
+      );
+
+      return [attachment];
     } catch (e) {
-      debugPrint('通知添付ファイルエラー: $e');
+      debugPrint('通知アイコンの設定中にエラーが発生しました: $e');
       return null;
     }
   }

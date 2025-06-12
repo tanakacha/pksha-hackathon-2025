@@ -46,3 +46,27 @@ app.*.map.json
 
 # env
 .env
+
+# Personal or device-specific information
+**/xcuserdata/
+**/*.xcuserstate
+**/UserInterfaceState.xcuserstate
+**/*.moved-aside
+/ios/GoogleService-Info.plist
+**/*.keystore
+**/*.jks
+**/*.p8
+**/*.p12
+**/*.key
+**/*.mobileprovision
+**/*.cert
+**/*.cer
+/ios/build/
+**/*.xcscmblueprint
+**/*.xccheckout
+
+# Local developer files
+/developers/
+.config/
+.history/
+**/fastlane/report.xml

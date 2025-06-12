@@ -46,7 +46,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
       title: '腕立て',
       message: '腕立て10回の時間です',
       scheduledTime: DateTime.now().add(const Duration(minutes: 10)),
-      iconName: 'alarm',
+      iconName: 'muscle',
     ),
     NotificationModel(
       id: 2,
@@ -60,7 +60,21 @@ class _NotificationScreenState extends State<NotificationScreen> {
       title: 'ミーティング',
       message: 'チームミーティングの時間です',
       scheduledTime: DateTime.now().add(const Duration(hours: 2)),
+      iconName: 'meeting',
+    ),
+    NotificationModel(
+      id: 4,
+      title: 'アラート',
+      message: '緊急アラートです',
+      scheduledTime: DateTime.now().add(const Duration(hours: 3)),
       iconName: 'alert',
+    ),
+    NotificationModel(
+      id: 5,
+      title: 'アラーム',
+      message: '設定したアラームの時間です',
+      scheduledTime: DateTime.now().add(const Duration(minutes: 30)),
+      iconName: 'alarm',
     ),
   ];
 
@@ -107,7 +121,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
       title: '予約通知テスト',
       body: '10秒後に予約した通知です',
       scheduledTime: now,
-      iconName: 'alarm',
+      iconName: 'muscle',
     );
 
     ScaffoldMessenger.of(
@@ -118,6 +132,8 @@ class _NotificationScreenState extends State<NotificationScreen> {
   // アイコン名から適切なIconDataを取得
   IconData _getIconData(String? iconName) {
     switch (iconName) {
+      case 'muscle':
+        return Icons.fitness_center;
       case 'alarm':
         return Icons.alarm;
       case 'meeting':
