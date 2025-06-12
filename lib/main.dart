@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:pksha/notification/notification.dart';
+import 'package:pksha/notification/models/notification_model.dart';
+import 'package:pksha/notification/services/notification_service.dart';
 // import 'services/notification_service.dart';
 // import 'models/notification_model.dart';
 
@@ -42,10 +43,10 @@ class _NotificationScreenState extends State<NotificationScreen> {
   final List<NotificationModel> _notifications = [
     NotificationModel(
       id: 1,
-      title: '会議のお知らせ',
-      message: '10分後に会議が始まります',
+      title: '腕立て',
+      message: '腕立て10回の時間です',
       scheduledTime: DateTime.now().add(const Duration(minutes: 10)),
-      iconName: 'meeting',
+      iconName: 'alarm',
     ),
     NotificationModel(
       id: 2,
@@ -106,12 +107,30 @@ class _NotificationScreenState extends State<NotificationScreen> {
       title: '予約通知テスト',
       body: '10秒後に予約した通知です',
       scheduledTime: now,
-      iconName: 'test',
+      iconName: 'alarm',
     );
 
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(const SnackBar(content: Text('テスト通知を送信しました')));
+  }
+
+  // アイコン名から適切なIconDataを取得
+  IconData _getIconData(String? iconName) {
+    switch (iconName) {
+      case 'alarm':
+        return Icons.alarm;
+      case 'meeting':
+        return Icons.people;
+      case 'task':
+        return Icons.assignment;
+      case 'alert':
+        return Icons.warning;
+      case 'test':
+        return Icons.notifications_active;
+      default:
+        return Icons.notifications;
+    }
   }
 
   @override
@@ -132,7 +151,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
             trailing: Text(
               '${notification.scheduledTime.hour}:${notification.scheduledTime.minute.toString().padLeft(2, '0')}',
             ),
-            leading: const Icon(Icons.notifications),
+            leading: Icon(_getIconData(notification.iconName)),
           );
         },
       ),
