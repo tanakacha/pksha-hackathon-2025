@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pksha/notification/models/notification_model.dart';
 import 'package:pksha/notification/services/notification_service.dart';
 import 'package:pksha/veiw/home/home_screen.dart';
@@ -12,5 +13,7 @@ void main() async {
   // 通知サービスの初期化
   await NotificationService().initialize();
 
-  runApp(const HomeScreen());
+  runApp(
+    const ProviderScope(child: HomeScreen()),
+  );
 }

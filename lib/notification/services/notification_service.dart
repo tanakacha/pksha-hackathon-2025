@@ -40,13 +40,6 @@ class NotificationService {
               },
             ),
             DarwinNotificationCategory(
-              'alarm',
-              actions: [DarwinNotificationAction.plain('stop', '停止')],
-              options: <DarwinNotificationCategoryOption>{
-                DarwinNotificationCategoryOption.hiddenPreviewShowTitle,
-              },
-            ),
-            DarwinNotificationCategory(
               'muscle',
               actions: [DarwinNotificationAction.plain('done', '完了')],
               options: <DarwinNotificationCategoryOption>{
