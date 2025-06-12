@@ -28,15 +28,21 @@ import requests
 
 # Import the agent helper from the companion module
 from src.calendar_agent import run_query
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv(Path(__file__).parent / "config" / ".env")
 
 # ----------------------------------------------------------------------------
 # Configuration helpers
 # ----------------------------------------------------------------------------
-REPO_DIR = Path(os.getenv("GCAL_MCP_REPO", "./google-calendar-mcp")).expanduser().resolve()
+REPO_DIR = (
+    Path(os.getenv("GCAL_MCP_REPO", "./google-calendar-mcp")).expanduser().resolve()
+)
 MCP_PORT = int(os.getenv("MCP_PORT", "3333"))
 MCP_BASE_URL = f"http://localhost:{MCP_PORT}"
 
-# Expose to downstream libraries (langchain‑mcp‑adapters looks at this)
+# Expose to downstream libraries (langchain‑mcp‑adapgcp-oauth.keys.jsonters looks at this)
 os.environ["MCP_BASE_URL"] = MCP_BASE_URL
 
 # Windows対応のコマンド設定
@@ -46,14 +52,15 @@ if platform.system() == "Windows":
         "start",
     ]
 else:
-NODE_CMD = [
-    "npm",
+    NODE_CMD = [
+        "npm",
         "start",
-]
+    ]
 
 # ----------------------------------------------------------------------------
 # Functions
 # ----------------------------------------------------------------------------
+
 
 def is_server_running(url: str) -> bool:
     """Check if MCP server is already running"""
@@ -63,34 +70,37 @@ def is_server_running(url: str) -> bool:
     except requests.RequestException:
         return False
 
+
 def start_mcp_server(repo: Path) -> subprocess.Popen:
     if not repo.exists():
         raise FileNotFoundError(f"MCP repo not found at {repo}")
-    
+
     # 環境変数の設定
     env = os.environ.copy()
     env.setdefault("PORT", str(MCP_PORT))
-    
+
     # Google OAuth認証情報のパスを設定
     oauth_path = repo / "gcp-oauth.keys.json"
     if oauth_path.exists():
         env["GOOGLE_OAUTH_CREDENTIALS"] = str(oauth_path)
-    
+
     print(f"🚀 Launching MCP server at {MCP_BASE_URL} ...")
     print(f"📁 Working directory: {repo}")
     print(f"⚙️  Command: {' '.join(NODE_CMD)}")
-    
+
     try:
-    proc = subprocess.Popen(
-        NODE_CMD,
-        cwd=str(repo),
-        env=env,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        text=True,
-            shell=True if platform.system() == "Windows" else False,  # Windowsではshell=Trueが必要な場合がある
-    )
-    return proc
+        proc = subprocess.Popen(
+            NODE_CMD,
+            cwd=str(repo),
+            env=env,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+            shell=(
+                True if platform.system() == "Windows" else False
+            ),  # Windowsではshell=Trueが必要な場合がある
+        )
+        return proc
     except FileNotFoundError as e:
         print(f"❌ Failed to start MCP server: {e}")
         print("💡 Make sure Node.js and npm are installed and available in PATH")
@@ -117,7 +127,7 @@ def main():
     print("🎯 Google Calendar MCP Agent Launcher")
     print(f"📂 Repository: {REPO_DIR}")
     print(f"🌐 Server URL: {MCP_BASE_URL}")
-    
+
     # 1) Check if MCP server is already running
     if is_server_running(MCP_BASE_URL):
         print(f"✅ MCP server is already running at {MCP_BASE_URL}")
@@ -125,11 +135,11 @@ def main():
     else:
         # Launch MCP server
         try:
-    proc = start_mcp_server(REPO_DIR)
-        if not wait_until_ready(MCP_BASE_URL):
-            print("❌ MCP server failed to start within timeout.")
+            proc = start_mcp_server(REPO_DIR)
+            if not wait_until_ready(MCP_BASE_URL):
+                print("❌ MCP server failed to start within timeout.")
                 if proc:
-            proc.terminate()
+                    proc.terminate()
                 sys.exit(1)
         except Exception as e:
             print(f"❌ Failed to start MCP server: {e}")
@@ -137,7 +147,9 @@ def main():
             print(f"   cd {REPO_DIR}")
             print("   npm start")
             print("\nThen run the agent directly:")
-            print("   python -c \"from src.calendar_agent import run_query; run_query('今日の予定を教えて')\"")
+            print(
+                "   python -c \"from src.calendar_agent import run_query; run_query('今日の予定を教えて')\""
+            )
             sys.exit(1)
 
     try:
@@ -150,12 +162,12 @@ def main():
     finally:
         # 3) Clean‑up
         if proc:
-        print("🛑 Shutting down MCP server ...")
-        proc.terminate()
-        try:
-            proc.wait(timeout=5)
-        except subprocess.TimeoutExpired:
-            proc.kill()
+            print("🛑 Shutting down MCP server ...")
+            proc.terminate()
+            try:
+                proc.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                proc.kill()
         else:
             print("🔄 MCP server was already running, left it as is")
 

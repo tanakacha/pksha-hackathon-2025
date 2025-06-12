@@ -3,6 +3,8 @@ import 'package:pksha/notification/models/notification_model.dart';
 import 'package:pksha/notification/services/notification_service.dart';
 import 'package:pksha/veiw/questionnaire/questionnaire_screen.dart';
 import 'package:pksha/veiw/training/training_screen.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -46,6 +48,8 @@ class _NotificationScreenState extends State<NotificationScreen> {
       iconName: 'training',
     ),
   ];
+
+  String workoutTime = "Press the button to get workout time";
 
   @override
   void initState() {
@@ -110,6 +114,99 @@ class _NotificationScreenState extends State<NotificationScreen> {
     }
   }
 
+  Future<void> getWorkoutTime() async {
+    try {
+      // localhostをエミュレーター用のIPアドレスに変更
+      final url = Uri.parse('http://10.0.2.2:8000/workout-time');
+      final response = await http.get(url);
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        setState(() {
+          workoutTime = data['time'] ?? 'No time available';
+        });
+      } else {
+        setState(() {
+          workoutTime = 'Failed to fetch workout time: ${response.statusCode}';
+        });
+      }
+    } catch (error) {
+      setState(() {
+        workoutTime = "Error: $error";
+      });
+    }
+  }
+
+  Future<void> getWorkoutTimeAndUpdateNotification() async {
+    try {
+      // FastAPIから筋トレ時間を取得
+      final url = Uri.parse('http://localhost:8000/workout-time');
+      final response = await http.get(url);
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        final workoutTimeString = data['time'];
+
+        if (workoutTimeString != null) {
+          try {
+            // 現在の日付と取得した時刻を組み合わせてDateTime型を生成
+            final now = DateTime.now();
+            final workoutTimeParts = workoutTimeString.split(':');
+            final workoutDateTime = DateTime(
+              now.year,
+              now.month,
+              now.day,
+              int.parse(workoutTimeParts[0]),
+              int.parse(workoutTimeParts[1]),
+            );
+
+            setState(() {
+              // 「腕立て」の通知時刻を更新
+              _notifications[0] = NotificationModel(
+                id: _notifications[0].id,
+                title: _notifications[0].title,
+                message: _notifications[0].message,
+                scheduledTime: workoutDateTime,
+                iconName: _notifications[0].iconName,
+              );
+            });
+
+            // 通知を再スケジュール
+            await _notificationService.scheduleNotification(
+              id: _notifications[0].id,
+              title: _notifications[0].title,
+              body: _notifications[0].message,
+              scheduledTime: workoutDateTime,
+              iconName: _notifications[0].iconName,
+            );
+
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(const SnackBar(content: Text('腕立ての通知時刻を更新しました')));
+          } catch (e) {
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(const SnackBar(content: Text('時刻の変換に失敗しました')));
+          }
+        } else {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('筋トレ時間が取得できませんでした')));
+        }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Failed to fetch workout time: ${response.statusCode}',
+            ),
+          ),
+        );
+      }
+    } catch (error) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error: $error')));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -124,9 +221,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
             tooltip: 'トレーニング',
             onPressed: () {
               Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => const TrainingScreen(),
-                ),
+                MaterialPageRoute(builder: (context) => const TrainingScreen()),
               );
             },
           ),
@@ -147,26 +242,49 @@ class _NotificationScreenState extends State<NotificationScreen> {
           ),
         ],
       ),
-      body: Column(
-        children: [
-          // リストビューをExpandedでラップして高さ制約を与える
-          Expanded(
-            child: ListView.builder(
-              itemCount: _notifications.length,
-              itemBuilder: (context, index) {
-                final notification = _notifications[index];
-                return ListTile(
-                  title: Text(notification.title),
-                  subtitle: Text(notification.message),
-                  trailing: Text(
-                    '${notification.scheduledTime.hour}:${notification.scheduledTime.minute.toString().padLeft(2, '0')}',
-                  ),
-                  leading: Icon(_getIconData(notification.iconName)),
-                );
-              },
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            // リストビューを高さ制約付きでラップしてスクロール可能にする
+            SizedBox(
+              height: MediaQuery.of(context).size.height * 0.6,
+              child: ListView.builder(
+                key: ValueKey(_notifications), // 再描画を強制するためのキー
+                itemCount: _notifications.length,
+                itemBuilder: (context, index) {
+                  final notification = _notifications[index];
+                  return ListTile(
+                    title: Text(notification.title),
+                    subtitle: Text(notification.message),
+                    trailing: Text(
+                      '${notification.scheduledTime.hour}:${notification.scheduledTime.minute.toString().padLeft(2, '0')}',
+                    ),
+                    leading: Icon(_getIconData(notification.iconName)),
+                  );
+                },
+              ),
             ),
-          ),
-        ],
+            // 筋トレ時間を表示
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Text(
+                workoutTime,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            // 筋トレ時間を取得ボタン
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: ElevatedButton(
+                onPressed: getWorkoutTimeAndUpdateNotification,
+                child: const Text('筋トレ時間を取得'),
+              ),
+            ),
+          ],
+        ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _sendTestNotification,
